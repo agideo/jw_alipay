@@ -1,0 +1,70 @@
+= JwAlipay
+
+install
+
+  gem 'jw_alipay'
+  bundle install
+
+or
+    
+  gem install 'jw_alipay'
+    
+doc
+  https://b.alipay.com/order/productDetail.htm?productId=2012120700377308
+
+config(config/alipay.yml)
+  development:
+    # alipay pid http://help.alipay.com/support/help_detail.htm?help_id=243726&sh=Y&tab=null&info_type=9
+    partner: '***'
+    # alipay key http://help.alipay.com/support/help_detail.htm?help_id=243726&sh=Y&tab=null&info_type=9
+    key: ***
+    # alipay account
+    email: ***
+
+  test:
+    partner: '***'
+    key: ***
+    email: ***
+
+  production:
+    partner: '***'
+    key: ***
+    email: ***
+
+routes
+  get "pay/index"
+  get "pay/pay_call_back"
+  post "pay/pay_notify"
+
+controller
+  # encoding: utf-8
+  class PayController < ApplicationController
+    include JwAlipay::WapHelper
+  
+    def index
+      redirect_to_wap_alipay_gateway(
+          :subject => "pay",
+          :out_trade_no => '1234567890', :total => 0.01,
+          :call_back_url => 'http://domain/pay/pay_call_back',
+          :notify_url => 'http://domain/pay/pay_notify',
+          :merchant_url => 'http://domain'
+      ) do |token|
+        puts token
+      end
+    end
+  
+    # call_back_url http://help.alipay.com/support/help_detail.htm?help_id=243126&sh=Y&tab=null&info_type=9
+    def pay_call_back
+      call_back do |data|
+        puts data.inspect
+      end
+    end
+  
+    # notify_url http://help.alipay.com/support/help_detail.htm?help_id=243126&sh=Y&tab=null&info_type=9
+    def pay_notify
+      notify do |data|
+        puts data.inspect
+      end
+      render :text => 'success'
+    end
+  end
